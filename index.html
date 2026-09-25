@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atom 2.6</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="face" id="face" data-state="idle">
+
+    <div class="thought-bubble">
+      <span class="thought-dot"></span>
+      <span class="thought-dot"></span>
+      <span class="thought-dot"></span>
+    </div>
+
+    <div class="speak-bubble">!</div>
+
+    <div class="sleep-bubble">
+      <span class="z z1">z</span>
+      <span class="z z2">Z</span>
+      <span class="z z3">z</span>
+    </div>
+
+    <div class="eye eye-left">
+      <div class="eye-wrap">
+        <div class="eye-core"></div>
+      </div>
+    </div>
+
+    <div class="eye eye-right">
+      <div class="eye-wrap">
+        <div class="eye-core"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="caption" id="caption"></div>
+
+  <form class="input-bar" id="inputForm" autocomplete="off">
+    <input type="text" id="inputText" placeholder="Pergunte algo ao Atom..." autocomplete="off" />
+    <button type="submit">Enviar</button>
+  </form>
+
+  <script src="script.js"></script>
+</body>
+</html>
