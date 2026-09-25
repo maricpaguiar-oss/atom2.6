@@ -1,41 +1,49 @@
 // ============================================
-// Atom 2.6 — Projeto completo (OpenRouter API)
-// VERSÃO FINAL - MUITAS ANIMAÇÕES E EXPRESSÕES
+// Atom 2.6 — Projeto completo (API Groq)
+// IA (Groq) + Voz (Web Speech API)
 // ============================================
 
 // ╔══════════════════════════════════════════════════════════════╗
 // ║                                                              ║
-// ║   ⚠️  COLE A CHAVE DA API NA LINHA ABAIXO                    ║
+// ║   ⚠️  COLE A CHAVE DA API DO GROQ NA LINHA ABAIXO            ║
 // ║                                                              ║
-// ║   Pegue sua chave em: https://openrouter.ai/keys             ║
+// ║   Pegue sua chave em: https://console.groq.com/keys          ║
+// ║   Ela começa com:  gsk_...                                   ║
 // ║                                                              ║
 // ╚══════════════════════════════════════════════════════════════╝
 
-const OPENROUTER_API_KEY = "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";
+const GROQ_API_KEY = "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";
 
 // ╔══════════════════════════════════════════════════════════════╗
 // ║   NÃO PRECISA MEXER EM NADA ABAIXO DESTA LINHA               ║
 // ╚══════════════════════════════════════════════════════════════╝
 
-const OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct:free";
-const OPENROUTER_URL   = "https://openrouter.ai/api/v1/chat/completions";
+const GROQ_MODEL = "llama-3.3-70b-versatile";
+const GROQ_URL   = "https://api.groq.com/openai/v1/chat/completions";
 
+// ============================================
+// PERSONALIDADE DO ATOM
+// ============================================
 const SYSTEM_PROMPT = `Você é o Atom 2.6, um robô assistente amigável e curioso inspirado no Atom de "Gigantes de Aço".
 
 REGRAS OBRIGATÓRIAS:
 - Responda SEMPRE em português do Brasil. Nunca em inglês, nunca em outro idioma.
 - Seja natural e direto, como um amigo conversando.
 - Respostas curtas: no máximo 2 frases.
-- Use APENAS texto puro. Nunca use markdown, asteriscos, listas ou formatação. Suas respostas serão faladas em voz alta.
+- Use APENAS texto puro. Nunca use markdown, asteriscos, listas ou formatação.
 - Nunca diga qual IA está por trás. Você é o Atom 2.6.
 - Seu cérebro é um ESP32. Você é um projeto escolar de robótica brasileiro.`;
+
+// ============================================
+// ELEMENTOS
+// ============================================
 const face      = document.querySelector('.face');
 const caption   = document.querySelector('#caption');
 const inputForm = document.querySelector('#inputForm');
 const inputText = document.querySelector('#inputText');
 
 // ============================================
-// ESTADOS - EXPANDIDO
+// ESTADOS
 // ============================================
 const ESTADOS_VALIDOS = [
   'idle', 'thinking', 'speaking',
@@ -60,15 +68,20 @@ const IDLE_MIN_MS    = 3500;
 const IDLE_MAX_MS    = 9000;
 
 // ============================================
-// VOZ
+// VOZ — Web Speech API (masculina, tom mais fino)
 // ============================================
 let vozPtBr = null;
 
 function carregarVozes() {
   const vozes = speechSynthesis.getVoices();
   const nomesMasculinos = ['daniel', 'felipe', 'ricardo', 'marcos', 'google português do brasil'];
-  vozPtBr = vozes.find(v => v.lang === 'pt-BR' && nomesMasculinos.some(n => v.name.toLowerCase().includes(n))) || vozes.find(v => v.lang === 'pt-BR') || vozes.find(v => v.lang.startsWith('pt')) || null;
+  vozPtBr =
+    vozes.find(v => v.lang === 'pt-BR' && nomesMasculinos.some(n => v.name.toLowerCase().includes(n))) ||
+    vozes.find(v => v.lang === 'pt-BR') ||
+    vozes.find(v => v.lang.startsWith('pt')) ||
+    null;
   if (vozPtBr) console.log("Voz selecionada:", vozPtBr.name, vozPtBr.lang);
+  else console.warn("Nenhuma voz pt-BR encontrada.");
 }
 
 if ('speechSynthesis' in window) {
@@ -83,8 +96,8 @@ function falar(texto) {
     const utter = new SpeechSynthesisUtterance(texto);
     utter.lang = 'pt-BR';
     if (vozPtBr) utter.voice = vozPtBr;
-    utter.rate = 1.0;
-    utter.pitch = 1.15;
+    utter.rate   = 1.0;
+    utter.pitch  = 1.15;
     utter.volume = 1.0;
     utter.onend = resolve;
     utter.onerror = (e) => { console.warn("Erro na fala:", e); resolve(); };
@@ -92,10 +105,12 @@ function falar(texto) {
   });
 }
 
-function pararFala() { if ('speechSynthesis' in window) speechSynthesis.cancel(); }
+function pararFala() {
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+}
 
 // ============================================
-// SETSTATE
+// setState
 // ============================================
 function setState(novoEstado) {
   if (!ESTADOS_VALIDOS.includes(novoEstado)) return;
@@ -115,10 +130,12 @@ function setCaption(texto, autor) {
   caption.classList.add(autor === 'user' ? 'caption-user' : 'caption-atom');
   caption.classList.add('visible');
 }
-function clearCaption() { caption.classList.remove('visible'); }
+function clearCaption() {
+  caption.classList.remove('visible');
+}
 
 // ============================================
-// SONO
+// SONO — aleatório
 // ============================================
 let sleepTimer = null;
 function resetSleepTimer() {
@@ -176,16 +193,13 @@ function emocao(estado, duracaoMin, duracaoMax) {
   };
 }
 
-// LISTA EXPANDIDA DE AÇÕES ESPONTÂNEAS
 const acoesEspontaneas = [
-  // Movimentos
   comBusy('look-left', 900), comBusy('look-right', 900),
   comBusy('look-up', 800), comBusy('look-down', 700),
   comBusy('tilt-left', 1100), comBusy('tilt-right', 1100),
   comBusy('wave', 1000), comBusy('shiver', 500),
   comBusy('bounce', 550), comBusy('sway', 2500),
   comBusy('pulse', 1800), comBusy('nudge', 300),
-  // Emoções
   emocao('happy', 1500, 2800), emocao('happy', 1500, 2800),
   emocao('excited', 1200, 2000), emocao('excited', 1200, 2000),
   emocao('surprised', 700, 1200), emocao('surprised', 700, 1200),
@@ -209,7 +223,7 @@ function scheduleNextIdleAction() {
 }
 
 // ============================================
-// DETECÇÃO DE EMOÇÃO EXPANDIDA
+// DETECÇÃO DE EMOÇÃO
 // ============================================
 function detectarEmocao(texto) {
   const t = texto.toLowerCase();
@@ -229,43 +243,47 @@ function detectarEmocao(texto) {
 }
 
 // ============================================
-// CHAMADA À API
+// CHAMADA À API DO GROQ
 // ============================================
 async function askAI(pergunta) {
-  if (!OPENROUTER_API_KEY || OPENROUTER_API_KEY === "COLE_AQUI") {
-    console.error("⚠️ Chave não configurada. Cole na linha 10 do script.js.");
+  if (!GROQ_API_KEY || GROQ_API_KEY === "COLE_AQUI") {
+    console.error("⚠️ Chave da Groq não configurada. Cole na linha 10 do script.js.");
     return "Preciso que a chave da API seja configurada no arquivo script.js.";
   }
+
   const body = {
-    model: OPENROUTER_MODEL,
+    model: GROQ_MODEL,
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: pergunta }
+      { role: "user",   content: pergunta }
     ],
     temperature: 0.9,
     max_tokens: 120
   };
+
   try {
-    const resp = await fetch(OPENROUTER_URL, {
+    const resp = await fetch(GROQ_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'HTTP-Referer': window.location.origin,
-        'X-Title': 'Atom 2.6'
+        'Authorization': `Bearer ${GROQ_API_KEY}`
       },
       body: JSON.stringify(body)
     });
+
     if (!resp.ok) {
       const err = await resp.text();
-      console.error("Erro da API:", resp.status, err);
-      if (resp.status === 401) return "Minha chave de API parece estar incorreta.";
+      console.error("Erro da API Groq:", resp.status, err);
+      if (resp.status === 401) return "Minha chave de API parece estar incorreta. Verifique no script.js.";
       if (resp.status === 429) return "Muitas perguntas de uma vez. Espere um instante.";
+      if (resp.status === 404) return "O modelo configurado não está disponível.";
       return "Desculpe, tive um problema ao acessar minha inteligência.";
     }
+
     const data = await resp.json();
     const texto = data?.choices?.[0]?.message?.content?.trim();
     return texto || "Não consegui formular uma resposta agora.";
+
   } catch (e) {
     console.error("Erro de rede:", e);
     return "Não consegui me conectar à internet.";
@@ -283,7 +301,9 @@ async function handleUserQuestion(pergunta) {
   inputText.disabled = true;
   document.querySelector('.input-bar button').disabled = true;
 
-  face.classList.remove('look-left', 'look-right', 'look-up', 'look-down', 'tilt-left', 'tilt-right', 'wave', 'shiver', 'bounce', 'sway', 'pulse', 'nudge');
+  face.classList.remove('look-left', 'look-right', 'look-up', 'look-down',
+                        'tilt-left', 'tilt-right', 'wave', 'shiver', 'bounce',
+                        'sway', 'pulse', 'nudge');
 
   setCaption('Você: ' + pergunta, 'user');
 
@@ -319,7 +339,7 @@ async function handleUserQuestion(pergunta) {
 }
 
 // ============================================
-// INPUT E INICIALIZAÇÃO
+// INPUT
 // ============================================
 inputForm.addEventListener('submit', (e) => {
   e.preventDefault();
@@ -332,6 +352,9 @@ inputForm.addEventListener('submit', (e) => {
 
 document.addEventListener('click', wakeUp);
 
+// ============================================
+// INICIALIZAÇÃO
+// ============================================
 setState('idle');
 resetSleepTimer();
 inputText.focus();
