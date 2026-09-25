@@ -1,24 +1,21 @@
 // ============================================
 // Atom 2.6 — Projeto completo (API Groq)
-// IA (Groq) + Voz (Web Speech API)
 // ============================================
 
 // ╔══════════════════════════════════════════════════════════════╗
-// ║                                                              ║
 // ║   ⚠️  COLE A CHAVE DA API DO GROQ NA LINHA ABAIXO            ║
-// ║                                                              ║
-// ║   Pegue sua chave em: https://console.groq.com/keys          ║
-// ║   Ela começa com:  gsk_...                                   ║
-// ║                                                              ║
+// ║   Pegue em: https://console.groq.com/keys                    ║
+// ║   Começa com: gsk_...                                        ║
 // ╚══════════════════════════════════════════════════════════════╝
 
-const GROQ_API_KEY = "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";
+const GROQ_API_KEY = "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";
 
 // ╔══════════════════════════════════════════════════════════════╗
 // ║   NÃO PRECISA MEXER EM NADA ABAIXO DESTA LINHA               ║
 // ╚══════════════════════════════════════════════════════════════╝
 
-const GROQ_MODEL = "llama-3.3-70b-versatile";
+// Modelo atualizado (o llama-3.3-70b-versatile foi descontinuado em 16/08/2026)
+const GROQ_MODEL = "openai/gpt-oss-120b";
 const GROQ_URL   = "https://api.groq.com/openai/v1/chat/completions";
 
 // ============================================
@@ -68,7 +65,7 @@ const IDLE_MIN_MS    = 3500;
 const IDLE_MAX_MS    = 9000;
 
 // ============================================
-// VOZ — Web Speech API (masculina, tom mais fino)
+// VOZ — Web Speech API
 // ============================================
 let vozPtBr = null;
 
@@ -135,7 +132,7 @@ function clearCaption() {
 }
 
 // ============================================
-// SONO — aleatório
+// SONO
 // ============================================
 let sleepTimer = null;
 function resetSleepTimer() {
@@ -273,11 +270,13 @@ async function askAI(pergunta) {
 
     if (!resp.ok) {
       const err = await resp.text();
-      console.error("Erro da API Groq:", resp.status, err);
-      if (resp.status === 401) return "Minha chave de API parece estar incorreta. Verifique no script.js.";
-      if (resp.status === 429) return "Muitas perguntas de uma vez. Espere um instante.";
-      if (resp.status === 404) return "O modelo configurado não está disponível.";
-      return "Desculpe, tive um problema ao acessar minha inteligência.";
+      console.error(`Erro da API Groq (Status: ${resp.status}):`, err);
+
+      if (resp.status === 401) return "Erro 401: Chave de API inválida. Crie uma nova em console.groq.com/keys.";
+      if (resp.status === 404) return "Erro 404: Modelo não encontrado. Verifique o nome em GROQ_MODEL.";
+      if (resp.status === 429) return "Erro 429: Muitas perguntas de uma vez. Espere um pouco.";
+      if (resp.status === 400) return "Erro 400: Requisição inválida. Verifique o console.";
+      return `Erro ${resp.status}: problema ao acessar a inteligência.`;
     }
 
     const data = await resp.json();
@@ -285,8 +284,8 @@ async function askAI(pergunta) {
     return texto || "Não consegui formular uma resposta agora.";
 
   } catch (e) {
-    console.error("Erro de rede:", e);
-    return "Não consegui me conectar à internet.";
+    console.error("Erro de rede ou CORS:", e);
+    return "Não consegui me conectar. Verifique a internet ou o console (F12).";
   }
 }
 
