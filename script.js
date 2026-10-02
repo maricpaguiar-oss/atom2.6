@@ -8,7 +8,7 @@
 // ║   Começa com: gsk_...                                        ║
 // ╚══════════════════════════════════════════════════════════════╝
 
-const GROQ_API_KEY = "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";
+const GROQ_API_KEY = "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";
 
 // ╔══════════════════════════════════════════════════════════════╗
 // ║   NÃO PRECISA MEXER EM NADA ABAIXO DESTA LINHA               ║
